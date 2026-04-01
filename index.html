@@ -38,7 +38,7 @@
     /* Config */
     #screen-config .logo{text-align:center;margin-bottom:24px}
     #screen-config .logo-icon{font-size:52px}
-    #screen-config h1{font-size:1.9rem;font-weight:800;background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:8px}
+    #screen-config h1{font-size:1.9rem;font-weight:800;background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:8px}
     #screen-config p{color:var(--text-muted);text-align:center;font-size:.92rem;line-height:1.6;margin-bottom:20px}
     .steps{margin-bottom:20px}
     .step{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
@@ -53,7 +53,7 @@
     .brand{text-align:center;margin-bottom:28px}
     .brand-icon{font-size:48px;display:block;margin-bottom:12px;animation:pulseIcon 3s ease-in-out infinite}
     @keyframes pulseIcon{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-    .brand h1{font-size:2.6rem;font-weight:900;background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+    .brand h1{font-size:2.6rem;font-weight:900;background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
     .brand p{color:var(--text-muted);font-size:.95rem;margin-top:8px}
 
     .input-row{display:flex;gap:10px}
@@ -86,7 +86,7 @@
     #screen-room{max-width:860px}
     .room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
     .room-title{display:flex;align-items:center;gap:10px}
-    .room-title h2{font-size:1.1rem;font-weight:700;background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .room-title h2{font-size:1.1rem;font-weight:700;background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
     .room-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s ease-in-out infinite}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
@@ -136,7 +136,7 @@
     .queue-list::-webkit-scrollbar-thumb{background:rgba(139,92,246,.3);border-radius:99px}
     .queue-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid transparent;transition:all .2s;cursor:default}
     .queue-item.playing{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.25)}
-    .queue-item.playing .q-num{background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .queue-item.playing .q-num{background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
     .q-num{width:22px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-align:center;flex-shrink:0}
     .q-thumb{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05)}
     .q-info{flex:1;overflow:hidden}
@@ -174,26 +174,123 @@
     .autoplay-bar{height:3px;background:rgba(251,191,36,.2);border-radius:99px;margin-top:6px;overflow:hidden}
     .autoplay-fill{height:100%;background:var(--amber);border-radius:99px;transition:width 1s linear}
 
-    /* Recommendations panel */
-    .recs-panel{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:16px}
-    .recs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;user-select:none}
-    .recs-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted)}
-    .recs-toggle{font-size:.72rem;color:var(--text-muted);background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:99px;padding:2px 10px;transition:.2s}
-    .recs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-    .rec-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .2s;cursor:default}
-    .rec-card:hover{border-color:rgba(139,92,246,.35);background:rgba(139,92,246,.06);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
-    .rec-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#111}
-    .rec-body{padding:8px 10px}
-    .rec-title{font-size:.78rem;font-weight:500;color:var(--text);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:4px}
-    .rec-meta{font-size:.68rem;color:var(--text-muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .rec-actions{display:flex;gap:6px}
-    .rec-btn{flex:1;padding:6px 8px;border-radius:8px;border:none;font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
-    .rec-btn.play{background:var(--primary-grad);color:#fff}
-    .rec-btn.play:hover{box-shadow:0 4px 12px rgba(139,92,246,.4)}
-    .rec-btn.add{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text-muted)}
-    .rec-btn.add:hover{background:rgba(255,255,255,.09);color:var(--text)}
-    .recs-loading{text-align:center;padding:20px;color:var(--text-muted);font-size:.82rem}
-    .recs-empty{text-align:center;padding:16px;color:var(--text-muted);font-size:.8rem}
+    /* Sidebar Tabs System */
+    .sidebar-tabs {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      height: 480px;
+    }
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(139,92,246,0.05);
+    }
+    .tab-content {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 16px;
+    }
+    .tab-content.active { display: flex; }
+
+    /* Chat Styles */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+      margin-bottom: 12px;
+    }
+    .chat-msg {
+      max-width: 85%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      position: relative;
+    }
+    .chat-msg.self {
+      align-self: flex-end;
+      background: var(--primary-grad);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-msg.other {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .msg-user { font-size: 0.65rem; font-weight: 800; margin-bottom: 2px; opacity: 0.8; }
+    .chat-input-row { display: flex; gap: 8px; }
+
+    /* Search Styles */
+    .search-results {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .search-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid transparent;
+      transition: 0.2s;
+    }
+    .search-item:hover { background: rgba(255,255,255,0.06); border-color: var(--border); }
+    .search-thumb { width: 80px; aspect-ratio: 16/9; border-radius: 6px; object-fit: cover; }
+    .search-info { flex: 1; min-width: 0; }
+    .search-title { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+    .search-meta { font-size: 0.65rem; color: var(--text-muted); }
+    .search-actions { display: flex; gap: 4px; margin-top: 6px; }
+
+    /* Recommendations Layout override */
+    .recs-grid-alt {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    .rec-card-alt {
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+    }
 
     @media(max-width:520px){
       .glass{padding:22px 18px}
@@ -346,16 +443,46 @@
       </div>
     </div>
 
-    <!-- Recommendations panel -->
-    <div class="recs-panel" id="recs-panel">
-      <div class="recs-header" onclick="toggleRecs()">
-        <span class="recs-title">✨ Recommended</span>
-        <span class="recs-toggle" id="recs-toggle">▾ Hide</span>
+    <!-- Sidebar Multi-Tab Container -->
+    <div class="sidebar-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" id="btn-tab-chat" onclick="switchTab('chat')">💬 Chat</button>
+        <button class="tab-btn" id="btn-tab-search" onclick="switchTab('search')">🔍 Search</button>
+        <button class="tab-btn" id="btn-tab-recs" onclick="switchTab('recs')">✨ For You</button>
       </div>
-      <div id="recs-body">
-        <div class="recs-loading" id="recs-loading">🔍 Loading recommendations…</div>
-        <div class="recs-grid" id="recs-grid" style="display:none"></div>
-        <div class="recs-empty" id="recs-empty" style="display:none">No recommendations found</div>
+
+      <!-- Tab 1: Chat -->
+      <div id="tab-chat" class="tab-content active">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-msg other">
+            <div class="msg-user">System</div>
+            Welcome to the room! Send a message to chat with other listeners.
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" class="url-input" id="chat-input" placeholder="Type a message..." onkeyup="if(event.key==='Enter')sendChatMessage()"/>
+          <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Search -->
+      <div id="tab-search" class="tab-content">
+        <div class="chat-input-row" style="margin-bottom:12px">
+          <input type="text" class="url-input" id="search-input" placeholder="Search YouTube songs..." onkeyup="if(event.key==='Enter')searchSongs()"/>
+          <button class="btn btn-primary" onclick="searchSongs()">🔍</button>
+        </div>
+        <div class="search-results" id="search-results">
+          <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">Search for music to add to the queue</div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Recommendations (Legacy Moved) -->
+      <div id="tab-recs" class="tab-content">
+        <div class="search-results" id="recs-results-container">
+          <div class="recs-loading" id="recs-loading">🔍 Curating suggestions...</div>
+          <div id="recs-grid-simple"></div>
+          <div class="recs-empty" id="recs-empty" style="display:none">No suggestions yet</div>
+        </div>
       </div>
     </div>
 
@@ -406,6 +533,7 @@
   let currentIndex = -1;
   let prevVideoId = null;
   let autoplayTimer = null, autoplayCancelled = false;
+  let serverTimeOffset = 0;
   const myId = localStorage.getItem('sb_uid') || (()=>{
     const id = Math.random().toString(36).slice(2, 11);
     localStorage.setItem('sb_uid', id); return id;
@@ -455,6 +583,10 @@
 
   // ── Boot ──
   const boot = () => {
+    onValue(ref(db, ".info/serverTimeOffset"), snap => {
+      serverTimeOffset = snap.val() || 0;
+    });
+
     const m = location.hash.match(/room=([a-z0-9]+)/i);
     m ? joinRoom(m[1]) : showScreen('screen-home');
   };
@@ -519,6 +651,142 @@
     initPlayer(videoId);
     setupPresence();
     setupRoomListener();
+    setupChatListener();
+  };
+
+  // ── Sidebar Tabs Logic ──
+  window.switchTab = tabName => {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    const btn = $(`btn-tab-${tabName}`);
+    const content = $(`tab-${tabName}`);
+    if (btn) btn.classList.add('active');
+    if (content) content.classList.add('active');
+    
+    if(tabName === 'chat') {
+      const chat = $('chat-messages');
+      if (chat) chat.scrollTop = chat.scrollHeight;
+    }
+  };
+
+  // ── Real-time Chat ──
+  let chatListener = null;
+  const setupChatListener = () => {
+    if (chatListener) off(query(ref(db, `rooms/${roomId}/chat`), limitToLast(30)));
+    const chatRef = ref(db, `rooms/${roomId}/chat`);
+    chatListener = onValue(query(chatRef, limitToLast(30)), snap => {
+      const messages = [];
+      snap.forEach(child => { messages.push(child.val()); });
+      renderChat(messages);
+    });
+  };
+
+  const renderChat = (messages) => {
+    const chat = $('chat-messages');
+    if (!chat) return;
+    chat.innerHTML = messages.map(msg => `
+      <div class="chat-msg ${msg.uid === myId ? 'self' : 'other'}">
+        <div class="msg-user">${msg.user || 'Guest'}</div>
+        <div class="msg-text">${msg.text}</div>
+      </div>
+    `).join('') || '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">No messages yet. Say hi! 👋</div>';
+    chat.scrollTop = chat.scrollHeight;
+  };
+
+  window.sendChatMessage = async () => {
+    const input = $('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    const chatRef = ref(db, `rooms/${roomId}/chat`);
+    await push(chatRef, {
+      uid: myId,
+      user: isHost ? 'Host' : 'Guest',
+      text: text,
+      timestamp: Date.now()
+    });
+    input.value = '';
+  };
+
+  // ── Song Search ──
+  window.searchSongs = async () => {
+    const q = $('search-input').value.trim();
+    if(!q) return;
+    const results = $('search-results');
+    results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">🔍 Searching YouTube...</div>';
+    
+    setTimeout(() => {
+      const mockResults = [
+        { id: 'dQw4w9WgXcQ', title: `${q} - Official Video`, author: 'Vibe Artist' },
+        { id: '9bZkp7q19f0', title: `${q} (Lofi Remix)`, author: 'Chill Beats' },
+        { id: 'kJQP7kiw5Fk', title: `${q} - Live Session`, author: 'Performance' }
+      ];
+      
+      results.innerHTML = mockResults.map(item => `
+        <div class="search-item">
+          <img class="search-thumb" src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg" />
+          <div class="search-info">
+            <div class="search-title">${item.title}</div>
+            <div class="search-meta">${item.author}</div>
+            <div class="search-actions">
+              <button class="btn btn-primary" style="padding:4px 8px;font-size:0.65rem" onclick="addSearchToQueue('${item.id}', '${item.title.replace(/'/g,"")}')">＋ Add to Queue</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }, 800);
+  };
+
+  window.addSearchToQueue = async (id, title) => {
+    if(!isHost) { toast('⚠️ Only host can add songs'); return; }
+    const item = { videoId: id, title: title, thumb: `https://img.youtube.com/vi/${id}/mqdefault.jpg` };
+    queue.push(item);
+    await writeQueue();
+    renderQueue();
+    toast(`✅ Added to queue`);
+  };
+
+  // ── Recommendations ──
+  let lastSeed = '';
+  const fetchRecs = async seedId => {
+    if (!seedId || seedId === lastSeed) return;
+    lastSeed = seedId;
+    const grid = $('recs-grid-simple');
+    const loading = $('recs-loading');
+    const empty = $('recs-empty');
+
+    if (loading) loading.style.display = 'block';
+    if (grid) grid.style.display = 'none';
+    if (empty) empty.style.display = 'none';
+
+    try {
+      const mockRecs = [
+          { videoId: 'jfKfPfyJRdk', title: 'lofi hip hop radio - beats to relax/study to', author: 'Lofi Girl' },
+          { videoId: '5qap5aO4i9A', title: 'lofi hip hop radio - beats to sleep/chill to', author: 'Lofi Girl' },
+          { videoId: 'DWcUYEEgQ9o', title: 'BGM for reading / studying', author: 'Chill' }
+      ];
+
+      if (grid) {
+        grid.innerHTML = mockRecs.map(r => `
+          <div class="search-item" style="background:rgba(255,255,255,0.02); margin-bottom: 8px; border-radius: 8px;">
+            <img class="search-thumb" src="https://img.youtube.com/vi/${r.videoId}/mqdefault.jpg" />
+            <div class="search-info">
+              <div class="search-title">${r.title}</div>
+              <div class="search-meta">${r.author}</div>
+              <div class="search-actions">
+                <button class="btn btn-primary" style="padding:4px 8px;font-size:0.65rem" onclick="addSearchToQueue('${r.videoId}', '${r.title.replace(/'/g,"")}')">＋ Add</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        grid.style.display = 'block';
+      }
+      if (loading) loading.style.display = 'none';
+    } catch (e) {
+      if (loading) loading.style.display = 'none';
+      if (empty) empty.style.display = 'block';
+    }
   };
 
   // ── Queue rendering ──
@@ -684,7 +952,7 @@
   const pushPlayState = async playing => {
     if (!roomId) return;
     const t = ytPlayer?.getCurrentTime?.() || 0;
-    await update(roomRef(), { isPlaying: playing, currentTime: parseFloat(t.toFixed(2)), updatedAt: Date.now() });
+    await update(roomRef(), { isPlaying: playing, currentTime: parseFloat(t.toFixed(2)), updatedAt: Date.now() + serverTimeOffset });
   };
 
   window.togglePlay = () => {
@@ -709,8 +977,8 @@
       $('progress-fill').style.width = pct+'%';
       $('progress-thumb').style.left = pct+'%';
       $('time-label').textContent    = `${fmtTime(cur)} / ${fmtTime(dur)}`;
-      // Heartbeat: push state every 4.5s so guests stay in sync
-      if (!window._hb || Date.now()-window._hb > 4500) {
+      // Heartbeat: push state every 2s so guests stay in sync
+      if (!window._hb || Date.now()-window._hb > 2000) {
         window._hb = Date.now();
         pushPlayState(ytPlayer.getPlayerState()===YT.PlayerState.PLAYING);
       }
@@ -754,11 +1022,14 @@
   const applyState = d => {
     if (!ytPlayer || !ytReady) return;
     const { isPlaying, currentTime, updatedAt } = d;
-    const drift  = (Date.now()-updatedAt)/1000;
-    const target = isPlaying ? currentTime+drift : currentTime;
-    const cur    = ytPlayer.getCurrentTime?.() || 0;
+    const now = Date.now() + serverTimeOffset;
+    const drift = (now - updatedAt) / 1000;
+    const target = isPlaying ? currentTime + drift : currentTime;
+    const cur = ytPlayer.getCurrentTime?.() || 0;
     const spinner=$('sync-spinner'), dot=$('sync-dot');
-    if (Math.abs(cur-target) > 2.5) {
+
+    // Tight threshold: 0.5s for a modern sync feel
+    if (Math.abs(cur - target) > 0.5) {
       spinner.style.display='block'; dot.style.display='none';
       ytPlayer.seekTo(target, true);
       setTimeout(() => { spinner.style.display='none'; dot.style.display='block'; }, 1200);
@@ -795,100 +1066,6 @@
     history.replaceState(null, '', location.pathname);
     showScreen('screen-home');
     toast('👋 Left the room');
-  };
-
-  // ══════════════════════════════════════════
-  // ── YouTube Recommendations (Piped API) ──
-  // ══════════════════════════════════════════
-  let recsOpen = true;
-  let recsVideoId = null;
-
-  // Piped instances to try in order (public, no API key)
-  const PIPED_HOSTS = [
-    'https://pipedapi.kavin.rocks',
-    'https://piped-api.garudalinux.org',
-    'https://api.piped.projectsegfau.lt'
-  ];
-
-  const fetchRecs = async videoId => {
-    if (recsVideoId === videoId) return; // already loaded for this video
-    recsVideoId = videoId;
-    $('recs-loading').style.display = 'block';
-    $('recs-grid').style.display    = 'none';
-    $('recs-empty').style.display   = 'none';
-
-    let related = null;
-    for (const host of PIPED_HOSTS) {
-      try {
-        const r = await fetch(`${host}/streams/${videoId}`, { signal: AbortSignal.timeout(5000) });
-        if (!r.ok) continue;
-        const d = await r.json();
-        if (d.relatedStreams?.length) { related = d.relatedStreams; break; }
-      } catch { /* try next host */ }
-    }
-
-    $('recs-loading').style.display = 'none';
-    if (!related?.length) { $('recs-empty').style.display = 'block'; return; }
-
-    // Filter to video entries only, take top 8
-    const vids = related.filter(r => r.type === 'stream' || r.url?.includes('/watch')).slice(0, 8);
-    if (!vids.length) { $('recs-empty').style.display = 'block'; return; }
-
-    $('recs-grid').innerHTML = vids.map(v => {
-      const vid = (v.url || '').replace('/watch?v=', '');
-      const thumb = v.thumbnail || `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`;
-      const title = (v.title || 'Unknown').replace(/</g,'&lt;');
-      const channel = (v.uploaderName || '').replace(/</g,'&lt;');
-      const dur = v.duration > 0 ? fmtTime(v.duration) : '';
-      return `
-        <div class="rec-card">
-          <img class="rec-thumb" src="${thumb}" alt="" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${vid}/mqdefault.jpg'" />
-          <div class="rec-body">
-            <div class="rec-title" title="${title}">${title}</div>
-            <div class="rec-meta">${channel}${dur ? ' · '+dur : ''}</div>
-            <div class="rec-actions">
-              <button class="rec-btn play" onclick="recPlay('${vid}','${title.replace(/'/g,'&apos;')}')" title="Play now">▶ Play</button>
-              <button class="rec-btn add"  onclick="recAdd('${vid}','${title.replace(/'/g,'&apos;')}','${thumb}')" title="Add to queue">＋ Queue</button>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-    $('recs-grid').style.display = 'grid';
-  };
-
-  window.recPlay = async (vid, title) => {
-    if (!isHost) { toast('🔒 Only the host can control playback'); return; }
-    cancelAutoplay();
-    const item = { videoId: vid, title: decodeHtml(title), thumb: thumbUrl(vid) };
-    queue.push(item);
-    currentIndex = queue.length - 1;
-    const qObj = {}; queue.forEach((it,i) => { qObj[i] = it; });
-    await update(roomRef(), {
-      videoId: vid, currentIndex, isPlaying: true, currentTime: 0,
-      queue: qObj, updatedAt: Date.now()
-    });
-    loadVideo(vid);
-    renderQueue();
-    fetchRecs(vid);
-    toast(`▶ Playing: ${item.title.slice(0,36)}`);
-  };
-
-  window.recAdd = async (vid, title, thumb) => {
-    if (!isHost) { toast('🔒 Only the host can add songs'); return; }
-    const item = { videoId: vid, title: decodeHtml(title), thumb };
-    queue.push(item);
-    const qObj = {}; queue.forEach((it,i) => { qObj[i] = it; });
-    await update(roomRef(), { queue: qObj, updatedAt: Date.now() });
-    renderQueue();
-    toast(`✅ Added to queue: ${item.title.slice(0,36)}`);
-  };
-
-  const decodeHtml = s => s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&apos;/g,"'").replace(/&quot;/g,'"');
-
-  window.toggleRecs = () => {
-    recsOpen = !recsOpen;
-    $('recs-body').style.display = recsOpen ? 'block' : 'none';
-    $('recs-toggle').textContent  = recsOpen ? '▾ Hide' : '▸ Show';
   };
 
   // ── Start ──
