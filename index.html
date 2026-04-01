@@ -241,9 +241,15 @@
         <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">First song URL</label>
         <div class="input-row">
           <input type="url" class="url-input" id="yt-url-input" placeholder="https://www.youtube.com/watch?v=..." />
-          <button class="btn btn-primary" id="btn-create" onclick="createRoom()">🎶 Create Room</button>
+          <button id="btn-create" onclick="createRoom()" class="btn btn-primary">🎶 Create Room</button>
         </div>
-        <div id="home-error"></div>
+        <div class="flex items-center my-md" style="display:flex;align-items:center;margin:10px 0">
+          <div class="flex-grow border-t border-white/10" style="flex:1;border-top:1px solid rgba(255,255,255,.1)"></div>
+          <span class="mx-sm text-xs text-white/30 font-medium" style="margin:0 10px;font-size:.7rem;color:rgba(255,255,255,.3)">ALREADY HAVE A ROOM?</span>
+          <div class="flex-grow border-t border-white/10" style="flex:1;border-top:1px solid rgba(255,255,255,.1)"></div>
+        </div>
+        <button onclick="joinRoom(myPermRoomId)" class="btn btn-ghost" style="width:100%;padding:10px;font-size:.85rem;border:1px solid rgba(255,255,255,.2);opacity:.8;font-style:italic">🚪 Enter My Static Private Room</button>
+        <div id="home-error" style="margin-top:10px;display:none"></div>
       </div>
       <div class="divider"></div>
       <div style="text-align:center">
@@ -400,9 +406,14 @@
   let currentIndex = -1;
   let prevVideoId = null;
   let autoplayTimer = null, autoplayCancelled = false;
-  const myId = sessionStorage.getItem('sb_uid') || (()=>{
-    const id = Math.random().toString(36).slice(2,11);
-    sessionStorage.setItem('sb_uid', id); return id;
+  const myId = localStorage.getItem('sb_uid') || (()=>{
+    const id = Math.random().toString(36).slice(2, 11);
+    localStorage.setItem('sb_uid', id); return id;
+  })();
+
+  const myPermRoomId = localStorage.getItem('sb_my_room_id') || (()=>{
+    const id = (Math.random().toString(36).slice(2, 9) + Math.random().toString(36).slice(2, 9));
+    localStorage.setItem('sb_my_room_id', id); return id;
   })();
 
   // ── Utils ──
@@ -459,11 +470,8 @@
     }
     const btn = $('btn-create'); btn.disabled = true; btn.textContent = 'Creating…';
     const title = await fetchTitle(videoId);
-    // Reuse the same room ID from localStorage so the share link is always the same
-    roomId  = localStorage.getItem('sb_my_room_id') || (Math.random().toString(36).slice(2,9) + Math.random().toString(36).slice(2,9));
-    localStorage.setItem('sb_my_room_id', roomId);
+    roomId = myPermRoomId;
     isHost  = true;
-    sessionStorage.setItem('sb_host_'+roomId, '1');
 
     const firstItem = { videoId, title, thumb: thumbUrl(videoId) };
     await set(roomRef(), {
@@ -484,12 +492,13 @@
 
   const joinRoom = async id => {
     roomId = id;
-    isHost = !!sessionStorage.getItem('sb_host_'+id);
     const snap = await get(roomRef());
     if (!snap.exists()) { toast('❌ Room not found'); showScreen('screen-home'); return; }
-    const d = snap.val();
-    const q = d.queue ? Object.values(d.queue) : [];
-    enterRoom(d.videoId, q, d.currentIndex || 0);
+
+    const data = snap.val();
+    isHost = (data.hostId === myId);
+    const q = data.queue ? Object.values(data.queue) : [];
+    enterRoom(data.videoId, q, data.currentIndex || 0);
   };
 
   const enterRoom = (videoId, q, idx) => {
