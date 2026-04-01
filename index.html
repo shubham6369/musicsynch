@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SyncBeat — Listen Together</title>
+  <meta name="description" content="Share a link and listen to YouTube music in perfect sync with your friends — with auto-play queue." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060610; --surface: rgba(255,255,255,0.04); --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08); --primary: #8b5cf6; --primary-2: #ec4899;
+      --primary-grad: linear-gradient(135deg,#8b5cf6,#ec4899); --text: #f1f0ff;
+      --text-muted: rgba(241,240,255,0.5); --green: #34d399; --amber: #fbbf24;
+    }
+    html,body { height:100%; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
+
+    /* Orbs */
+    .bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+    .bg-orb { position:absolute; border-radius:50%; filter:blur(100px); opacity:.18; animation:drift 14s infinite alternate ease-in-out; }
+    .bg-orb:nth-child(1){width:600px;height:600px;background:#8b5cf6;top:-200px;left:-150px;animation-duration:16s}
+    .bg-orb:nth-child(2){width:500px;height:500px;background:#ec4899;bottom:-200px;right:-150px;animation-duration:20s;animation-delay:-5s}
+    .bg-orb:nth-child(3){width:350px;height:350px;background:#06b6d4;top:40%;left:50%;transform:translate(-50%,-50%);animation-duration:18s;animation-delay:-8s}
+    @keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,40px) scale(1.08)}}
+    .bg-orb:nth-child(3) { animation-name: drift3; }
+    @keyframes drift3{0%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(calc(-50% + 30px),calc(-50% + 40px)) scale(1.08)}}
+
+    #app { position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px; }
+
+    .screen { display:none; width:100%; max-width:700px; animation:fadeUp .4s ease; }
+    .screen.active { display:block; }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+    .glass { background:var(--surface); border:1px solid var(--border); border-radius:20px; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); padding:36px 40px; }
+
+    /* Config */
+    #screen-config .logo{text-align:center;margin-bottom:24px}
+    #screen-config .logo-icon{font-size:52px}
+    #screen-config h1{font-size:1.9rem;font-weight:800;background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:8px}
+    #screen-config p{color:var(--text-muted);text-align:center;font-size:.92rem;line-height:1.6;margin-bottom:20px}
+    .steps{margin-bottom:20px}
+    .step{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+    .step-num{min-width:24px;height:24px;border-radius:50%;background:var(--primary-grad);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700}
+    .step p{font-size:.85rem;color:var(--text-muted);line-height:1.5}
+    .step p a{color:var(--primary);text-decoration:none}.step p a:hover{text-decoration:underline}
+    .step p code{background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);border-radius:4px;padding:1px 6px;font-size:.8rem;color:#c4b5fd}
+    .config-block{background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+    .config-block h3{font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);margin-bottom:14px}
+
+    /* Home */
+    .brand{text-align:center;margin-bottom:28px}
+    .brand-icon{font-size:48px;display:block;margin-bottom:12px;animation:pulseIcon 3s ease-in-out infinite}
+    @keyframes pulseIcon{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .brand h1{font-size:2.6rem;font-weight:900;background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+    .brand p{color:var(--text-muted);font-size:.95rem;margin-top:8px}
+
+    .input-row{display:flex;gap:10px}
+    .url-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-size:.95rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .25s,box-shadow .25s}
+    .url-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+    .url-input::placeholder{color:rgba(255,255,255,.2)}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border-radius:12px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;transition:all .2s;white-space:nowrap}
+    .btn:active{transform:scale(.97)}
+    .btn-primary{background:var(--primary-grad);color:#fff;box-shadow:0 4px 20px rgba(139,92,246,.35)}
+    .btn-primary:hover{box-shadow:0 6px 28px rgba(139,92,246,.5);transform:translateY(-1px)}
+    .btn-ghost{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover{background:var(--surface-hover)}
+    .btn-sm{padding:9px 14px;font-size:.82rem;border-radius:9px}
+    .btn-full{width:100%}
+    .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+    /* Pills */
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:.78rem;font-weight:500}
+    .pill-red{background:rgba(244,63,94,.15);border:1px solid rgba(244,63,94,.3);color:#fb7185}
+    .pill-green{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:var(--green)}
+    .pill-purple{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);color:#c4b5fd}
+    .pill-amber{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:var(--amber)}
+
+    #home-error{margin-top:10px;display:none}
+    .divider{height:1px;background:var(--border);margin:20px 0}
+
+    /* Room screen */
+    #screen-room{max-width:860px}
+    .room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+    .room-title{display:flex;align-items:center;gap:10px}
+    .room-title h2{font-size:1.1rem;font-weight:700;background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .room-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+    /* Track bar */
+    .track-bar{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px}
+    .track-thumb{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#4c1d95,#831843);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .track-name{font-size:.88rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .track-sub{font-size:.74rem;color:var(--text-muted);margin-top:2px}
+    .track-up-next{font-size:.72rem;color:var(--amber);margin-top:3px;display:none}
+
+    /* Player */
+    .player-wrap{position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:16/9;margin-bottom:16px;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+    #yt-player{width:100%;height:100%;display:block;border:none}
+    #guest-overlay{position:absolute;inset:0;z-index:10;cursor:not-allowed;display:none}
+    .guest-badge{position:absolute;bottom:12px;left:12px;z-index:11;background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.1);padding:5px 12px;border-radius:99px;font-size:.75rem;font-weight:500;color:rgba(255,255,255,.7);backdrop-filter:blur(8px);display:none}
+
+    /* Controls */
+    .controls-panel{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:16px}
+    .controls-panel.hidden{display:none}
+    .controls-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:14px}
+    .controls-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .ctrl-btn{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .ctrl-btn:hover{background:var(--surface-hover);border-color:var(--primary);box-shadow:0 0 12px rgba(139,92,246,.3);transform:scale(1.05)}
+    .ctrl-btn.play-pause{width:52px;height:52px;font-size:1.2rem;background:var(--primary-grad);border:none;box-shadow:0 4px 16px rgba(139,92,246,.4)}
+    .ctrl-btn.play-pause:hover{box-shadow:0 6px 24px rgba(139,92,246,.6);transform:scale(1.06)}
+    .progress-area{flex:1;min-width:160px}
+    .progress-track{height:4px;background:rgba(255,255,255,.1);border-radius:99px;cursor:pointer;position:relative;transition:height .15s}
+    .progress-track:hover{height:6px}
+    .progress-fill{height:100%;background:var(--primary-grad);border-radius:99px;transition:width .5s linear;pointer-events:none}
+    .progress-thumb{position:absolute;top:50%;transform:translate(50%,-50%);width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(139,92,246,.6);pointer-events:none;opacity:0;transition:opacity .15s}
+    .progress-track:hover .progress-thumb{opacity:1}
+    .time-label{font-size:.76rem;color:var(--text-muted);font-variant-numeric:tabular-nums;margin-top:5px}
+
+    /* Queue panel */
+    .queue-panel{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:16px}
+    .queue-panel.hidden{display:none}
+    .queue-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .queue-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted)}
+    .queue-count{font-size:.72rem;color:var(--text-muted);background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:99px;padding:2px 10px}
+    .add-song-row{display:flex;gap:8px;margin-bottom:14px}
+    .add-song-row .url-input{font-size:.85rem;padding:10px 14px}
+    .add-song-row .btn{padding:10px 16px;font-size:.82rem}
+    .queue-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.3) transparent}
+    .queue-list::-webkit-scrollbar{width:4px}
+    .queue-list::-webkit-scrollbar-track{background:transparent}
+    .queue-list::-webkit-scrollbar-thumb{background:rgba(139,92,246,.3);border-radius:99px}
+    .queue-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid transparent;transition:all .2s;cursor:default}
+    .queue-item.playing{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.25)}
+    .queue-item.playing .q-num{background:var(--primary-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .q-num{width:22px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-align:center;flex-shrink:0}
+    .q-thumb{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05)}
+    .q-info{flex:1;overflow:hidden}
+    .q-title{font-size:.82rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .q-sub{font-size:.7rem;color:var(--text-muted);margin-top:2px}
+    .q-actions{display:flex;gap:4px;flex-shrink:0}
+    .q-btn{width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .15s}
+    .q-btn:hover{background:rgba(255,255,255,.07);color:var(--text)}
+    .q-btn.del:hover{color:#fb7185;background:rgba(244,63,94,.1)}
+    .q-playing-pill{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--primary-grad);color:#fff;padding:2px 7px;border-radius:99px;align-self:center}
+    .queue-empty{text-align:center;padding:20px;color:var(--text-muted);font-size:.84rem}
+
+    /* Guest sync */
+    #guest-status{margin-bottom:14px;display:none}
+    .sync-bar{display:flex;align-items:center;gap:10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:12px 16px}
+    .sync-bar span{font-size:.85rem;color:var(--text-muted)}
+    .sync-bar strong{color:var(--green)}
+    .syncing-spinner{width:16px;height:16px;border:2px solid rgba(52,211,153,.2);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Share */
+    .share-panel{display:flex;gap:10px;align-items:stretch}
+    .share-link-box{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.82rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Inter',monospace}
+
+    /* Toast */
+    #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(20,20,35,.95);border:1px solid var(--border);padding:12px 24px;border-radius:99px;font-size:.88rem;font-weight:500;backdrop-filter:blur(16px);color:var(--text);transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;opacity:0;z-index:9999;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+    #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+    /* Auto-advance banner */
+    #autoplay-banner{display:none;align-items:center;gap:10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:12px 16px;margin-bottom:14px}
+    #autoplay-banner.show{display:flex}
+    .autoplay-icon{font-size:18px}
+    .autoplay-text{flex:1;font-size:.84rem;color:var(--text-muted)}
+    .autoplay-text strong{color:var(--amber)}
+    .autoplay-bar{height:3px;background:rgba(251,191,36,.2);border-radius:99px;margin-top:6px;overflow:hidden}
+    .autoplay-fill{height:100%;background:var(--amber);border-radius:99px;transition:width 1s linear}
+
+    @media(max-width:520px){
+      .glass{padding:22px 18px}
+      .brand h1{font-size:2rem}
+      .controls-row{justify-content:center}
+      .share-panel{flex-direction:column}
+      .add-song-row{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+<div class="bg-orbs"><div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div></div>
+<div id="app">
+
+  <!-- ══ Config ══ -->
+  <div id="screen-config" class="screen">
+    <div class="glass">
+      <div class="logo"><div class="logo-icon">🎵</div>
+        <h1>SyncBeat Setup</h1>
+        <p>Connect your Firebase project once to enable real-time sync and auto-play queues.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><p>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → create a project (e.g. <code>syncbeat</code>)</p></div>
+        <div class="step"><div class="step-num">2</div><p><strong>Build → Realtime Database</strong> → Create database → any region → <strong>test mode</strong></p></div>
+        <div class="step"><div class="step-num">3</div><p><strong>Project Settings → Your apps → Web app</strong> → copy the config → paste below</p></div>
+      </div>
+      <div class="config-block">
+        <h3>Firebase Config</h3>
+        <div id="config-fields"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="saveConfig()">💾 Save &amp; Launch</button>
+    </div>
+  </div>
+
+  <!-- ══ Home ══ -->
+  <div id="screen-home" class="screen">
+    <div class="glass">
+      <div class="brand">
+        <span class="brand-icon">🎵</span>
+        <h1>SyncBeat</h1>
+        <p>Paste a YouTube link — build a queue — share &amp; listen in sync</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">First song URL</label>
+        <div class="input-row">
+          <input type="url" class="url-input" id="yt-url-input" placeholder="https://www.youtube.com/watch?v=..." />
+          <button class="btn btn-primary" id="btn-create" onclick="createRoom()">🎶 Create Room</button>
+        </div>
+        <div id="home-error"></div>
+      </div>
+      <div class="divider"></div>
+      <div style="text-align:center">
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:10px">Or join an existing room</p>
+        <div class="input-row">
+          <input type="text" class="url-input" id="join-code-input" placeholder="Paste room link or code…" />
+          <button class="btn btn-ghost" onclick="joinFromCode()">Join</button>
+        </div>
+      </div>
+      <div style="margin-top:14px;text-align:center">
+        <button class="btn btn-ghost" onclick="showScreen('screen-config')" style="font-size:.78rem;padding:8px 14px;opacity:.55">⚙️ Reconfigure Firebase</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Room ══ -->
+  <div id="screen-room" class="screen">
+    <div class="room-header">
+      <div class="room-title"><span style="font-size:22px">🎵</span><h2>SyncBeat</h2></div>
+      <div class="room-meta">
+        <div class="live-dot"></div>
+        <span style="font-size:.78rem;color:var(--text-muted)">LIVE</span>
+        <span>👥 <span id="viewer-count" style="font-size:.8rem;color:var(--text-muted)">1 listener</span></span>
+        <span id="role-pill" class="pill pill-purple">🎛 Host</span>
+      </div>
+    </div>
+
+    <!-- Now playing bar -->
+    <div class="track-bar">
+      <div class="track-thumb" id="track-thumb-wrap">🎵</div>
+      <div style="overflow:hidden;flex:1">
+        <div class="track-name" id="track-title">Loading…</div>
+        <div class="track-sub" id="track-sub">SyncBeat Room</div>
+        <div class="track-up-next" id="track-up-next"></div>
+      </div>
+    </div>
+
+    <!-- Guest sync bar -->
+    <div id="guest-status">
+      <div class="sync-bar">
+        <div class="syncing-spinner" id="sync-spinner" style="display:none"></div>
+        <div class="live-dot" id="sync-dot"></div>
+        <span>Synced to host — <strong>you're locked in 🎧</strong></span>
+      </div>
+    </div>
+
+    <!-- Auto-advance banner (visible when song ends, counting down) -->
+    <div id="autoplay-banner">
+      <div class="autoplay-icon">⏭</div>
+      <div class="autoplay-text" style="flex:1">
+        <div><strong id="banner-title">Next song</strong> plays in <strong><span id="banner-countdown">3</span>s</strong></div>
+        <div class="autoplay-bar"><div class="autoplay-fill" id="banner-bar" style="width:0%"></div></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="cancelAutoplay()">Cancel</button>
+    </div>
+
+    <!-- Player -->
+    <div class="player-wrap">
+      <div id="yt-player"></div>
+      <div id="guest-overlay"></div>
+      <div class="guest-badge" id="guest-badge">🎧 Guest — Synced to host</div>
+    </div>
+
+    <!-- Host controls -->
+    <div class="controls-panel hidden" id="host-controls">
+      <div class="controls-title">🎛 Host Controls — only you see this</div>
+      <div class="controls-row">
+        <button class="ctrl-btn" onclick="skipPrev()" title="Previous">⏮</button>
+        <button class="ctrl-btn play-pause" id="btn-play-pause" onclick="togglePlay()" title="Play/Pause">▶</button>
+        <button class="ctrl-btn" onclick="skipNext()" title="Skip Next" id="btn-skip">⏭</button>
+        <div class="progress-area">
+          <div class="progress-track" id="progress-track" onclick="seekFromClick(event)">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+            <div class="progress-thumb" id="progress-thumb" style="left:0%"></div>
+          </div>
+          <div class="time-label" id="time-label">0:00 / 0:00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queue panel -->
+    <div class="queue-panel" id="queue-panel">
+      <div class="queue-header">
+        <span class="queue-title">🎵 Queue</span>
+        <span class="queue-count" id="queue-count">0 songs</span>
+      </div>
+      <!-- Add song (host only) -->
+      <div class="add-song-row hidden" id="add-song-row">
+        <input type="url" class="url-input" id="add-song-input" placeholder="Add YouTube URL to queue…" />
+        <button class="btn btn-ghost btn-sm" onclick="addToQueue()">＋ Add</button>
+      </div>
+      <div class="queue-list" id="queue-list">
+        <div class="queue-empty">Queue is empty</div>
+      </div>
+    </div>
+
+    <!-- Share -->
+    <div class="glass" style="padding:18px 22px;margin-top:0">
+      <div style="font-size:.76rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px">📤 Share with friends</div>
+      <div class="share-panel">
+        <div class="share-link-box" id="share-link-display">—</div>
+        <button class="btn btn-primary" onclick="copyShareLink()">📋 Copy Link</button>
+      </div>
+      <p style="font-size:.74rem;color:var(--text-muted);margin-top:8px">Friends who open this link will auto-sync to your playback &amp; hear every queued song.</p>
+    </div>
+
+    <div style="margin-top:12px;text-align:center">
+      <button class="btn btn-ghost" onclick="leaveRoom()" style="font-size:.78rem;padding:8px 16px;opacity:.55">← Leave Room</button>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script type="module">
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getDatabase, ref, set, update, get, onValue, onDisconnect, remove, push
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ── Firebase config ──
+  const firebaseConfig = {
+    apiKey:            "AIzaSyBSCNq6CfGbzb5ZZh1jZEQ8B0ULFA40A-g",
+    authDomain:        "skillbazzar-f25a5.firebaseapp.com",
+    databaseURL:       "https://skillbazzar-f25a5-default-rtdb.firebaseio.com",
+    projectId:         "skillbazzar-f25a5",
+    storageBucket:     "skillbazzar-f25a5.firebasestorage.app",
+    messagingSenderId: "293298225357",
+    appId:             "1:293298225357:web:3c707645006267c3de6984"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // ── State ──
+  let roomId, isHost = false;
+  let ytPlayer = null, ytReady = false;
+  let progressTimer = null, roomUnsub = null, presenceRef = null;
+  let queue = [];
+  let currentIndex = -1;
+  let prevVideoId = null;
+  let autoplayTimer = null, autoplayCancelled = false;
+  const myId = sessionStorage.getItem('sb_uid') || (()=>{
+    const id = Math.random().toString(36).slice(2,11);
+    sessionStorage.setItem('sb_uid', id); return id;
+  })();
+
+  // ── Utils ──
+  window.showScreen = id => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  };
+  const toast = (m, d=2600) => {
+    const e = document.getElementById('toast');
+    e.textContent = m; e.classList.add('show');
+    clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('show'), d);
+  };
+  const $         = id => document.getElementById(id);
+  const roomRef   = () => ref(db, `rooms/${roomId}`);
+  const thumbUrl  = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+  const fmtTime   = s => {
+    if (!s || isNaN(s)) return '0:00';
+    return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+  };
+  const parseYTId = url => {
+    try {
+      const u = new URL(url.trim());
+      if (u.hostname.includes('youtu.be')) return u.pathname.slice(1).split('?')[0];
+      if (u.hostname.includes('youtube.com') || u.hostname.includes('music.youtube.com'))
+        return u.searchParams.get('v') || u.pathname.split('/embed/')[1]?.split('?')[0];
+    } catch(_) {}
+    const m = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  };
+
+  // ── Fetch title (no API key) ──
+  const fetchTitle = async videoId => {
+    try {
+      const r = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+      if (!r.ok) return `YouTube — ${videoId}`;
+      return (await r.json()).title || `YouTube — ${videoId}`;
+    } catch { return `YouTube — ${videoId}`; }
+  };
+
+  // ── Boot ──
+  const boot = () => {
+    const m = location.hash.match(/room=([a-z0-9]+)/i);
+    m ? joinRoom(m[1]) : showScreen('screen-home');
+  };
+
+  // ── Create room ──
+  window.createRoom = async () => {
+    const url = $('yt-url-input').value.trim();
+    $('home-error').style.display = 'none';
+    const videoId = parseYTId(url);
+    if (!videoId) {
+      $('home-error').innerHTML = '<div class="pill pill-red">⚠️ Invalid YouTube URL</div>';
+      $('home-error').style.display = 'block'; return;
+    }
+    const btn = $('btn-create'); btn.disabled = true; btn.textContent = 'Creating…';
+    const title = await fetchTitle(videoId);
+    roomId  = Math.random().toString(36).slice(2,9) + Math.random().toString(36).slice(2,9);
+    isHost  = true;
+    sessionStorage.setItem('sb_host_'+roomId, '1');
+
+    const firstItem = { videoId, title, thumb: thumbUrl(videoId) };
+    await set(roomRef(), {
+      videoId, isPlaying: false, currentTime: 0,
+      currentIndex: 0, hostId: myId, updatedAt: Date.now(),
+      queue: { 0: firstItem }
+    });
+
+    btn.disabled = false; btn.textContent = '🎶 Create Room';
+    enterRoom(videoId, [firstItem], 0);
+  };
+
+  window.joinFromCode = () => {
+    const raw = $('join-code-input').value.trim();
+    const m = raw.match(/room=([a-z0-9]+)/i) || raw.match(/^([a-z0-9]{6,20})$/i);
+    m ? joinRoom(m[1]) : toast('⚠️ Invalid room link');
+  };
+
+  const joinRoom = async id => {
+    roomId = id;
+    isHost = !!sessionStorage.getItem('sb_host_'+id);
+    const snap = await get(roomRef());
+    if (!snap.exists()) { toast('❌ Room not found'); showScreen('screen-home'); return; }
+    const d = snap.val();
+    const q = d.queue ? Object.values(d.queue) : [];
+    enterRoom(d.videoId, q, d.currentIndex || 0);
+  };
+
+  const enterRoom = (videoId, q, idx) => {
+    queue = q; currentIndex = idx;
+    history.replaceState(null, '', `${location.pathname}#room=${roomId}`);
+    $('share-link-display').textContent = `${location.origin}${location.pathname}#room=${roomId}`;
+
+    showScreen('screen-room');
+    $('role-pill').textContent    = isHost ? '🎛 Host' : '🎧 Guest';
+    $('role-pill').className      = `pill ${isHost ? 'pill-purple' : 'pill-green'}`;
+    $('host-controls').classList.toggle('hidden', !isHost);
+    $('add-song-row').classList.toggle('hidden', !isHost);
+    $('guest-overlay').style.display = isHost ? 'none' : 'block';
+    $('guest-badge').style.display   = isHost ? 'none' : 'block';
+    $('guest-status').style.display  = isHost ? 'none' : 'block';
+
+    renderQueue();
+    initPlayer(videoId);
+    setupPresence();
+    setupRoomListener();
+  };
+
+  // ── Queue rendering ──
+  const renderQueue = () => {
+    const list = $('queue-list');
+    $('queue-count').textContent = `${queue.length} song${queue.length!==1?'s':''}`;
+    if (!queue.length) { list.innerHTML='<div class="queue-empty">Queue is empty — add songs above 🎵</div>'; return; }
+
+    const next = queue[currentIndex+1];
+    const upEl = $('track-up-next');
+    if (next) { upEl.textContent=`⏭ Up next: ${next.title}`; upEl.style.display='block'; }
+    else       { upEl.style.display='none'; }
+
+    list.innerHTML = queue.map((item,i) => `
+      <div class="queue-item ${i===currentIndex?'playing':''}" id="qi-${i}">
+        <div class="q-num">${i===currentIndex?'▶':i+1}</div>
+        <img class="q-thumb" src="${item.thumb}" alt="" onerror="this.style.display='none'"/>
+        <div class="q-info">
+          <div class="q-title">${item.title}</div>
+          ${i===currentIndex?'<div class="q-sub">Now playing</div>':''}
+        </div>
+        ${i===currentIndex?'<div class="q-playing-pill">NOW</div>':''}
+        ${isHost&&i!==currentIndex?`<div class="q-actions">
+          <button class="q-btn" onclick="playQueueItem(${i})" title="Play now">▶</button>
+          <button class="q-btn del" onclick="removeQueueItem(${i})" title="Remove">✕</button>
+        </div>`:''}
+      </div>`).join('');
+
+    setTimeout(() => document.getElementById(`qi-${currentIndex}`)?.scrollIntoView({behavior:'smooth',block:'nearest'}), 100);
+  };
+
+  // ── Write queue to RTDB (object format) ──
+  const writeQueue = async () => {
+    const qObj = {};
+    queue.forEach((item,i) => { qObj[i] = item; });
+    await update(roomRef(), { queue: qObj, updatedAt: Date.now() });
+  };
+
+  // ── Add to queue (host) ──
+  window.addToQueue = async () => {
+    const url = $('add-song-input').value.trim();
+    if (!url) return;
+    const videoId = parseYTId(url);
+    if (!videoId) { toast('⚠️ Invalid YouTube URL'); return; }
+    const btn = document.querySelector('#add-song-row .btn');
+    btn.disabled = true; btn.textContent = 'Adding…';
+    const title = await fetchTitle(videoId);
+    const item  = { videoId, title, thumb: thumbUrl(videoId) };
+    queue.push(item);
+    await writeQueue();
+    $('add-song-input').value = '';
+    btn.disabled = false; btn.textContent = '＋ Add';
+    renderQueue();
+    toast(`✅ Added: ${title.slice(0,40)}`);
+  };
+
+  window.removeQueueItem = async i => {
+    if (i === currentIndex) { toast('⚠️ Cannot remove currently playing song'); return; }
+    queue.splice(i, 1);
+    const newIdx = i < currentIndex ? currentIndex - 1 : currentIndex;
+    currentIndex = newIdx;
+    const qObj = {}; queue.forEach((item,j) => { qObj[j] = item; });
+    await update(roomRef(), { queue: qObj, currentIndex: newIdx, updatedAt: Date.now() });
+    renderQueue(); toast('🗑 Removed');
+  };
+
+  window.playQueueItem = async i => {
+    if (!isHost) return;
+    cancelAutoplay(); await advanceTo(i);
+  };
+
+  // ── Auto-advance ──
+  const advanceTo = async idx => {
+    if (idx < 0 || idx >= queue.length) return;
+    const item = queue[idx]; currentIndex = idx;
+    await update(roomRef(), {
+      videoId: item.videoId, currentIndex: idx,
+      isPlaying: true, currentTime: 0, updatedAt: Date.now()
+    });
+    loadVideo(item.videoId);
+    renderQueue();
+    toast(`🎵 Now playing: ${item.title.slice(0,38)}`);
+  };
+
+  const triggerAutoplay = () => {
+    if (!isHost) return;
+    const nextIdx = currentIndex + 1;
+    if (nextIdx >= queue.length) { toast('🎵 That was the last song!', 3500); return; }
+    const next = queue[nextIdx];
+    autoplayCancelled = false;
+    let t = 3;
+    const banner = $('autoplay-banner');
+    $('banner-title').textContent    = next.title.slice(0,45);
+    $('banner-countdown').textContent = t;
+    $('banner-bar').style.transition = 'none'; $('banner-bar').style.width = '0%';
+    banner.classList.add('show');
+    setTimeout(() => { $('banner-bar').style.transition='width 3s linear'; $('banner-bar').style.width='100%'; }, 50);
+    autoplayTimer = setInterval(() => {
+      if (autoplayCancelled) { clearInterval(autoplayTimer); banner.classList.remove('show'); return; }
+      t--; $('banner-countdown').textContent = t;
+      if (t <= 0) { clearInterval(autoplayTimer); banner.classList.remove('show'); advanceTo(nextIdx); }
+    }, 1000);
+  };
+
+  window.cancelAutoplay = () => {
+    autoplayCancelled = true;
+    if (autoplayTimer) clearInterval(autoplayTimer);
+    $('autoplay-banner').classList.remove('show');
+    toast('⏸ Auto-play cancelled');
+  };
+
+  window.skipNext = () => { if (!isHost) return; cancelAutoplay(); if (currentIndex+1>=queue.length){toast('⏭ No more songs');return;} advanceTo(currentIndex+1); };
+  window.skipPrev = () => { if (!isHost) return; cancelAutoplay(); if (currentIndex<=0){ytPlayer?.seekTo(0,true);return;} advanceTo(currentIndex-1); };
+
+  // ── YouTube Player ──
+  const initPlayer = videoId => {
+    prevVideoId = videoId;
+    window._pendingYT = videoId;
+    if (window.YT?.Player) createPlayer(videoId);
+  };
+
+  window.onYouTubeIframeAPIReady = () => { if (window._pendingYT) createPlayer(window._pendingYT); };
+
+  const createPlayer = videoId => {
+    ytPlayer = new YT.Player('yt-player', {
+      videoId,
+      playerVars: { autoplay:0, controls:isHost?1:0, modestbranding:1, rel:0, iv_load_policy:3 },
+      events: {
+        onReady: e => {
+          ytReady = true;
+          updateNowPlaying(e.target.getVideoData()?.title);
+          if (isHost) startProgress();
+          else        applyInitialState();
+        },
+        onStateChange: e => {
+          if (!isHost) return;
+          if (e.data === YT.PlayerState.PLAYING)  { pushPlayState(true);  $('btn-play-pause').textContent='⏸'; }
+          else if (e.data === YT.PlayerState.PAUSED)  { pushPlayState(false); $('btn-play-pause').textContent='▶'; }
+          else if (e.data === YT.PlayerState.ENDED)   { pushPlayState(false); $('btn-play-pause').textContent='▶'; triggerAutoplay(); }
+        }
+      }
+    });
+  };
+
+  const loadVideo = videoId => {
+    prevVideoId = videoId;
+    if (ytPlayer?.loadVideoById) {
+      ytPlayer.loadVideoById(videoId);
+      setTimeout(() => updateNowPlaying(null, videoId), 1500);
+    }
+  };
+
+  const updateNowPlaying = (title, videoId) => {
+    const cur = queue[currentIndex];
+    $('track-title').textContent = title || cur?.title || 'YouTube Video';
+    $('track-sub').textContent   = `Room: ${roomId.slice(0,8)}…`;
+    const img = cur?.thumb || (videoId ? thumbUrl(videoId) : null);
+    if (img) $('track-thumb-wrap').innerHTML = `<img src="${img}" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.parentElement.textContent='🎵'"/>`;
+  };
+
+  // ── Push play state (host only) ──
+  const pushPlayState = async playing => {
+    if (!roomId) return;
+    const t = ytPlayer?.getCurrentTime?.() || 0;
+    await update(roomRef(), { isPlaying: playing, currentTime: parseFloat(t.toFixed(2)), updatedAt: Date.now() });
+  };
+
+  window.togglePlay = () => {
+    if (!ytReady || !isHost) return;
+    ytPlayer.getPlayerState()===YT.PlayerState.PLAYING ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+  };
+
+  window.seekFromClick = e => {
+    if (!isHost || !ytReady) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1,(e.clientX-r.left)/r.width));
+    ytPlayer.seekTo(ratio*ytPlayer.getDuration(), true);
+    pushPlayState(ytPlayer.getPlayerState()===YT.PlayerState.PLAYING);
+  };
+
+  const startProgress = () => {
+    if (progressTimer) clearInterval(progressTimer);
+    progressTimer = setInterval(() => {
+      if (!ytReady || !ytPlayer?.getCurrentTime) return;
+      const cur = ytPlayer.getCurrentTime(), dur = ytPlayer.getDuration() || 1;
+      const pct = (cur/dur)*100;
+      $('progress-fill').style.width = pct+'%';
+      $('progress-thumb').style.left = pct+'%';
+      $('time-label').textContent    = `${fmtTime(cur)} / ${fmtTime(dur)}`;
+      // Heartbeat: push state every 4.5s so guests stay in sync
+      if (!window._hb || Date.now()-window._hb > 4500) {
+        window._hb = Date.now();
+        pushPlayState(ytPlayer.getPlayerState()===YT.PlayerState.PLAYING);
+      }
+    }, 500);
+  };
+
+  // ── Guest: apply initial state ──
+  const applyInitialState = () => {
+    get(roomRef()).then(snap => { if (snap.exists() && ytReady) applyState(snap.val()); });
+  };
+
+  // ── Real-time listener (RTDB onValue) ──
+  const setupRoomListener = () => {
+    if (roomUnsub) roomUnsub();
+    roomUnsub = onValue(roomRef(), snap => {
+      if (!snap.exists()) return;
+      const d = snap.val();
+
+      // Queue changed → re-render
+      if (d.queue) {
+        queue = Object.values(d.queue);
+        renderQueue();
+      }
+
+      // Song changed (guest auto-cues new video)
+      if (!isHost && d.videoId && d.videoId !== prevVideoId) {
+        prevVideoId  = d.videoId;
+        currentIndex = d.currentIndex || 0;
+        updateNowPlaying(queue[currentIndex]?.title, d.videoId);
+        if (ytPlayer?.loadVideoById) {
+          ytPlayer.loadVideoById(d.videoId);
+          if (d.isPlaying) setTimeout(() => { ytPlayer.seekTo(d.currentTime||0,true); ytPlayer.playVideo(); }, 900);
+        }
+        return;
+      }
+
+      if (!isHost && ytReady) applyState(d);
+    });
+  };
+
+  const applyState = d => {
+    if (!ytPlayer || !ytReady) return;
+    const { isPlaying, currentTime, updatedAt } = d;
+    const drift  = (Date.now()-updatedAt)/1000;
+    const target = isPlaying ? currentTime+drift : currentTime;
+    const cur    = ytPlayer.getCurrentTime?.() || 0;
+    const spinner=$('sync-spinner'), dot=$('sync-dot');
+    if (Math.abs(cur-target) > 2.5) {
+      spinner.style.display='block'; dot.style.display='none';
+      ytPlayer.seekTo(target, true);
+      setTimeout(() => { spinner.style.display='none'; dot.style.display='block'; }, 1200);
+    }
+    if (isPlaying  && ytPlayer.getPlayerState()!==YT.PlayerState.PLAYING) ytPlayer.playVideo();
+    if (!isPlaying && ytPlayer.getPlayerState()===YT.PlayerState.PLAYING)  ytPlayer.pauseVideo();
+  };
+
+  // ── Presence — bulletproof with onDisconnect ──
+  const setupPresence = () => {
+    presenceRef = ref(db, `rooms/${roomId}/presence/${myId}`);
+    set(presenceRef, true);
+    // RTDB removes this automatically when connection drops (tab crash, network loss, etc.)
+    onDisconnect(presenceRef).remove();
+
+    onValue(ref(db, `rooms/${roomId}/presence`), snap => {
+      const n = snap.exists() ? Object.keys(snap.val()).length : 1;
+      $('viewer-count').textContent = `${n} listener${n!==1?'s':''}`;
+    });
+  };
+
+  // ── Share & leave ──
+  window.copyShareLink = () => {
+    navigator.clipboard.writeText($('share-link-display').textContent)
+      .then(() => toast('✅ Link copied! Send to your friends 🎉'));
+  };
+
+  window.leaveRoom = () => {
+    if (presenceRef) remove(presenceRef);
+    if (roomUnsub)   roomUnsub();
+    if (progressTimer) clearInterval(progressTimer);
+    cancelAutoplay();
+    ytPlayer?.stopVideo?.();
+    history.replaceState(null, '', location.pathname);
+    showScreen('screen-home');
+    toast('👋 Left the room');
+  };
+
+  // ── Start ──
+  boot();
+</script>
+
+</body>
+</html>

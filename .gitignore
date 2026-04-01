@@ -1,0 +1,4 @@
+git_out.txt
+*.txt
+.DS_Store
+Thumbs.db
