@@ -459,7 +459,9 @@
     }
     const btn = $('btn-create'); btn.disabled = true; btn.textContent = 'Creating…';
     const title = await fetchTitle(videoId);
-    roomId  = Math.random().toString(36).slice(2,9) + Math.random().toString(36).slice(2,9);
+    // Reuse the same room ID from localStorage so the share link is always the same
+    roomId  = localStorage.getItem('sb_my_room_id') || (Math.random().toString(36).slice(2,9) + Math.random().toString(36).slice(2,9));
+    localStorage.setItem('sb_my_room_id', roomId);
     isHost  = true;
     sessionStorage.setItem('sb_host_'+roomId, '1');
 
