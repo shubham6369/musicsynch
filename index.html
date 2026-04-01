@@ -174,12 +174,34 @@
     .autoplay-bar{height:3px;background:rgba(251,191,36,.2);border-radius:99px;margin-top:6px;overflow:hidden}
     .autoplay-fill{height:100%;background:var(--amber);border-radius:99px;transition:width 1s linear}
 
+    /* Recommendations panel */
+    .recs-panel{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:16px}
+    .recs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;user-select:none}
+    .recs-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted)}
+    .recs-toggle{font-size:.72rem;color:var(--text-muted);background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:99px;padding:2px 10px;transition:.2s}
+    .recs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+    .rec-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .2s;cursor:default}
+    .rec-card:hover{border-color:rgba(139,92,246,.35);background:rgba(139,92,246,.06);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+    .rec-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#111}
+    .rec-body{padding:8px 10px}
+    .rec-title{font-size:.78rem;font-weight:500;color:var(--text);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:4px}
+    .rec-meta{font-size:.68rem;color:var(--text-muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .rec-actions{display:flex;gap:6px}
+    .rec-btn{flex:1;padding:6px 8px;border-radius:8px;border:none;font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+    .rec-btn.play{background:var(--primary-grad);color:#fff}
+    .rec-btn.play:hover{box-shadow:0 4px 12px rgba(139,92,246,.4)}
+    .rec-btn.add{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text-muted)}
+    .rec-btn.add:hover{background:rgba(255,255,255,.09);color:var(--text)}
+    .recs-loading{text-align:center;padding:20px;color:var(--text-muted);font-size:.82rem}
+    .recs-empty{text-align:center;padding:16px;color:var(--text-muted);font-size:.8rem}
+
     @media(max-width:520px){
       .glass{padding:22px 18px}
       .brand h1{font-size:2rem}
       .controls-row{justify-content:center}
       .share-panel{flex-direction:column}
       .add-song-row{flex-direction:column}
+      .recs-grid{grid-template-columns:1fr 1fr}
     }
   </style>
 </head>
@@ -315,6 +337,19 @@
       </div>
       <div class="queue-list" id="queue-list">
         <div class="queue-empty">Queue is empty</div>
+      </div>
+    </div>
+
+    <!-- Recommendations panel -->
+    <div class="recs-panel" id="recs-panel">
+      <div class="recs-header" onclick="toggleRecs()">
+        <span class="recs-title">✨ Recommended</span>
+        <span class="recs-toggle" id="recs-toggle">▾ Hide</span>
+      </div>
+      <div id="recs-body">
+        <div class="recs-loading" id="recs-loading">🔍 Loading recommendations…</div>
+        <div class="recs-grid" id="recs-grid" style="display:none"></div>
+        <div class="recs-empty" id="recs-empty" style="display:none">No recommendations found</div>
       </div>
     </div>
 
@@ -604,7 +639,7 @@
         onReady: e => {
           ytReady = true;
           updateNowPlaying(e.target.getVideoData()?.title);
-          if (isHost) startProgress();
+          if (isHost) { startProgress(); fetchRecs(queue[currentIndex]?.videoId || window._pendingYT); }
           else        applyInitialState();
         },
         onStateChange: e => {
@@ -622,6 +657,7 @@
     if (ytPlayer?.loadVideoById) {
       ytPlayer.loadVideoById(videoId);
       setTimeout(() => updateNowPlaying(null, videoId), 1500);
+      fetchRecs(videoId);
     }
   };
 
@@ -748,6 +784,100 @@
     history.replaceState(null, '', location.pathname);
     showScreen('screen-home');
     toast('👋 Left the room');
+  };
+
+  // ══════════════════════════════════════════
+  // ── YouTube Recommendations (Piped API) ──
+  // ══════════════════════════════════════════
+  let recsOpen = true;
+  let recsVideoId = null;
+
+  // Piped instances to try in order (public, no API key)
+  const PIPED_HOSTS = [
+    'https://pipedapi.kavin.rocks',
+    'https://piped-api.garudalinux.org',
+    'https://api.piped.projectsegfau.lt'
+  ];
+
+  const fetchRecs = async videoId => {
+    if (recsVideoId === videoId) return; // already loaded for this video
+    recsVideoId = videoId;
+    $('recs-loading').style.display = 'block';
+    $('recs-grid').style.display    = 'none';
+    $('recs-empty').style.display   = 'none';
+
+    let related = null;
+    for (const host of PIPED_HOSTS) {
+      try {
+        const r = await fetch(`${host}/streams/${videoId}`, { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) continue;
+        const d = await r.json();
+        if (d.relatedStreams?.length) { related = d.relatedStreams; break; }
+      } catch { /* try next host */ }
+    }
+
+    $('recs-loading').style.display = 'none';
+    if (!related?.length) { $('recs-empty').style.display = 'block'; return; }
+
+    // Filter to video entries only, take top 8
+    const vids = related.filter(r => r.type === 'stream' || r.url?.includes('/watch')).slice(0, 8);
+    if (!vids.length) { $('recs-empty').style.display = 'block'; return; }
+
+    $('recs-grid').innerHTML = vids.map(v => {
+      const vid = (v.url || '').replace('/watch?v=', '');
+      const thumb = v.thumbnail || `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`;
+      const title = (v.title || 'Unknown').replace(/</g,'&lt;');
+      const channel = (v.uploaderName || '').replace(/</g,'&lt;');
+      const dur = v.duration > 0 ? fmtTime(v.duration) : '';
+      return `
+        <div class="rec-card">
+          <img class="rec-thumb" src="${thumb}" alt="" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${vid}/mqdefault.jpg'" />
+          <div class="rec-body">
+            <div class="rec-title" title="${title}">${title}</div>
+            <div class="rec-meta">${channel}${dur ? ' · '+dur : ''}</div>
+            <div class="rec-actions">
+              <button class="rec-btn play" onclick="recPlay('${vid}','${title.replace(/'/g,'&apos;')}')" title="Play now">▶ Play</button>
+              <button class="rec-btn add"  onclick="recAdd('${vid}','${title.replace(/'/g,'&apos;')}','${thumb}')" title="Add to queue">＋ Queue</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+    $('recs-grid').style.display = 'grid';
+  };
+
+  window.recPlay = async (vid, title) => {
+    if (!isHost) { toast('🔒 Only the host can control playback'); return; }
+    cancelAutoplay();
+    const item = { videoId: vid, title: decodeHtml(title), thumb: thumbUrl(vid) };
+    queue.push(item);
+    currentIndex = queue.length - 1;
+    const qObj = {}; queue.forEach((it,i) => { qObj[i] = it; });
+    await update(roomRef(), {
+      videoId: vid, currentIndex, isPlaying: true, currentTime: 0,
+      queue: qObj, updatedAt: Date.now()
+    });
+    loadVideo(vid);
+    renderQueue();
+    fetchRecs(vid);
+    toast(`▶ Playing: ${item.title.slice(0,36)}`);
+  };
+
+  window.recAdd = async (vid, title, thumb) => {
+    if (!isHost) { toast('🔒 Only the host can add songs'); return; }
+    const item = { videoId: vid, title: decodeHtml(title), thumb };
+    queue.push(item);
+    const qObj = {}; queue.forEach((it,i) => { qObj[i] = it; });
+    await update(roomRef(), { queue: qObj, updatedAt: Date.now() });
+    renderQueue();
+    toast(`✅ Added to queue: ${item.title.slice(0,36)}`);
+  };
+
+  const decodeHtml = s => s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&apos;/g,"'").replace(/&quot;/g,'"');
+
+  window.toggleRecs = () => {
+    recsOpen = !recsOpen;
+    $('recs-body').style.display = recsOpen ? 'block' : 'none';
+    $('recs-toggle').textContent  = recsOpen ? '▾ Hide' : '▸ Show';
   };
 
   // ── Start ──
